@@ -1,6 +1,4 @@
 import sqlite3 from 'sqlite3';
-import { promisify } from 'util';
-import { Task, SyncQueueItem } from '../types';
 
 const sqlite = sqlite3.verbose();
 
@@ -49,7 +47,7 @@ export class Database {
   }
 
   // Helper methods
-  run(sql: string, params: any[] = []): Promise<void> {
+  run(sql: string, params: (string | number | boolean)[] = []): Promise<void> {
     return new Promise((resolve, reject) => {
       this.db.run(sql, params, (err) => {
         if (err) reject(err);
@@ -58,20 +56,26 @@ export class Database {
     });
   }
 
-  get(sql: string, params: any[] = []): Promise<any> {
-    return new Promise((resolve, reject) => {
-      this.db.get(sql, params, (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
+  get(sql: string, params: (string | number | boolean)[] = []): Promise<Record<string, unknown>> {
+    return new Promise<Record<string, unknown>>((resolve, reject) => {
+      this.db.get(sql, params, (err: Error | null, row: unknown) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve((row || {}) as Record<string, unknown>);
+        }
       });
     });
   }
 
-  all(sql: string, params: any[] = []): Promise<any[]> {
-    return new Promise((resolve, reject) => {
-      this.db.all(sql, params, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
+  all(sql: string, params: (string | number | boolean)[] = []): Promise<Record<string, unknown>[]> {
+    return new Promise<Record<string, unknown>[]>((resolve, reject) => {
+      this.db.all(sql, params, (err: Error | null, rows: unknown[]) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve((rows || []) as Record<string, unknown>[]);
+        }
       });
     });
   }
